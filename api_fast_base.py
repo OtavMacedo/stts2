@@ -79,10 +79,17 @@ async def gerar_audio(request: Request):
                 format="mp3",
                 encoding="MP3",
                 bits_per_sample=16,
+                backend="ffmpeg",
             )
             media_type = "audio/mpeg"
         else:
-            torchaudio.save(buffer, tensor, sample_rate=tts_engine.rate, format="wav")
+            torchaudio.save(
+                buffer,
+                tensor,
+                sample_rate=tts_engine.rate,
+                format="wav",
+                backend="ffmpeg",
+            )
             media_type = "audio/wav"
         buffer.seek(0)
 

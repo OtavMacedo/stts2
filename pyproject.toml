@@ -5,7 +5,6 @@ description = ""
 authors = [
     {name = "otavio",email = "otavio@sippulse.com"}
 ]
-readme = "README.md"
 requires-python = ">=3.12, <3.13"
 dependencies = [
     "fastapi[standard] (>=0.121.2,<0.122.0)",
@@ -28,6 +27,9 @@ dependencies = [
     "monotonic-align @ git+https://github.com/resemble-ai/monotonic_align.git",
 ]
 
+
+[tool.poetry]
+package-mode = false
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

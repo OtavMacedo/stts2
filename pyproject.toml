@@ -25,6 +25,12 @@ dependencies = [
     "einops-exts (>=0.0.4,<0.0.5)",
     "tqdm (>=4.67.1,<5.0.0)",
     "monotonic-align @ git+https://github.com/resemble-ai/monotonic_align.git",
+    "pyworld (>=0.3.5,<0.4.0)",
+    "pandas (>=2.3.3,<3.0.0)",
+    "jiwer (>=4.0.0,<5.0.0)",
+    "tensorboard (>=2.20.0,<3.0.0)",
+    "click (>=8.3.1,<9.0.0)",
+    "torchcodec (>=0.8.1,<0.9.0)",
 ]
 
 

@@ -4,26 +4,42 @@ import yaml
 import phonemizer
 import warnings
 import librosa
+from munch import Munch
 
-from models import load_ASR_models, load_F0_models, build_model
-from utils import recursive_munch
-from symbols.BrPt_symbols import BRPT_list
+from src.core.models import load_ASR_models, load_F0_models, build_model
+from src.symbols.BrPt_symbols import BRPT_list
 from phonemizer.phonemize import _phonemize
-from Utils.MLPLBERT.util import load_plbert
-from Modules.diffusion.sampler import DiffusionSampler, ADPM2Sampler, KarrasSchedule
+from src.styletts2.Utils.MLPLBERT.util import load_plbert
+from src.styletts2.Modules.diffusion.sampler import (
+    DiffusionSampler,
+    ADPM2Sampler,
+    KarrasSchedule,
+)
 from collections import OrderedDict
 
 from phonemizer.punctuation import Punctuation
 from phonemizer.logger import get_logger
 from phonemizer.backend import BACKENDS
 
+from pathlib import Path
+
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 
 
+def recursive_munch(d):
+    if isinstance(d, dict):
+        return Munch((k, recursive_munch(v)) for k, v in d.items())
+    elif isinstance(d, list):
+        return [recursive_munch(v) for v in d]
+    else:
+        return d
+
+
 class TTSInferenceEngine:
     def __init__(self):
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        # self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = "cpu"
 
         self.to_mel = torchaudio.transforms.MelSpectrogram(
             n_mels=80, n_fft=2048, win_length=1200, hop_length=300
@@ -31,7 +47,7 @@ class TTSInferenceEngine:
         self.mean = -4
         self.std = 4
 
-        self.config = yaml.safe_load(open("./config_base_cerebrium.yml"))
+        self.config = yaml.safe_load(open(Path("./model_config.yml")))
         self.rate = 24000
 
         self.backend = self._load_phonemizer_backend()

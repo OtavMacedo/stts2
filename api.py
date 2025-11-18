@@ -4,20 +4,10 @@ from fastapi.responses import StreamingResponse
 import io
 import torch
 import torchaudio
-import main_base as tts
+import src.core.tts_engine as tts
 
 
 tts_engine = None
-
-
-@contextlib.asynccontextmanager
-async def lifespan(app: FastAPI):
-    global tts_engine
-    tts_engine = tts.TTSInferenceEngine()
-    yield
-
-
-app = FastAPI(title="TTS Streaming API", lifespan=lifespan)
 
 reference_dicts = {
     "Antonio": ("Masculino", "./wavs_reference/Antonio_0.wav"),
@@ -36,6 +26,16 @@ reference_dicts = {
     "Valerio": ("Masculino", "./wavs_reference/Valerio_4.wav"),
     "Yara": ("Feminino", "./wavs_reference/Yara_2.wav"),
 }
+
+
+@contextlib.asynccontextmanager
+async def lifespan(app: FastAPI):
+    global tts_engine
+    tts_engine = tts.TTSInferenceEngine()
+    yield
+
+
+app = FastAPI(title="TTS Streaming API", lifespan=lifespan)
 
 
 @app.get("/")

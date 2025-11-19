@@ -12,9 +12,9 @@ second_stage_load_pretrained: true # set to true if the pre-trained model is for
 load_only_params: false # set to true if do not want to load epoch numbers and optimizer parameters
 
 F0_path:    'epoch_base_00100.pth' #'./StyleTTS2-main/Utils/JDC/epoch_00100.pth' 
-ASR_config: './Utils/ASR/config_humberto_ft.yml' #'./StyleTTS2-main/Utils/ASR/config_humberto.yml'
+ASR_config: 'src/styletts2/Utils/ASR/config_humberto_ft.yml' #'./StyleTTS2-main/Utils/ASR/config_humberto.yml'
 ASR_path:   'epoch_base_00050.pth' #'./StyleTTS2-main/Utils/ASR/epoch_00200.pth' 
-PLBERT_dir: './Utils/MLPLBERT/' #Utils/PLBERT/
+PLBERT_dir: 'src/styletts2/Utils/MLPLBERT/' #Utils/PLBERT/
 
 data_params:
   train_data: "sippulse_correcoes_train.txt"

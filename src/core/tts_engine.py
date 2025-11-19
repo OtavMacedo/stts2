@@ -37,6 +37,8 @@ def recursive_munch(d):
 
 
 class TTSInferenceEngine:
+    _instance: "TTSInferenceEngine" = None
+
     def __init__(self):
         # self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.device = "cpu"
@@ -47,7 +49,9 @@ class TTSInferenceEngine:
         self.mean = -4
         self.std = 4
 
-        self.config = yaml.safe_load(open(Path("./model_config.yml")))
+        self.config = yaml.safe_load(
+            open(Path(__file__).resolve().parent / "model_config.yml")
+        )
         self.rate = 24000
 
         self.backend = self._load_phonemizer_backend()
@@ -55,6 +59,12 @@ class TTSInferenceEngine:
         self.sampler = self._create_sampler()
 
         # self.warmup()
+
+    @classmethod
+    def factory(cls):
+        if cls._instance is None:
+            cls._instance = TTSInferenceEngine()
+        return cls._instance
 
     def _load_phonemizer_backend(self):
         return BACKENDS["espeak"](

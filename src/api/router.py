@@ -13,21 +13,21 @@ router = APIRouter()
 wavs_path = Path(__file__).resolve().parent.parent / "wavs_reference"
 
 reference_dicts = {
-    "antonio": wavs_path / "Antonio_0.wav",
-    "brenda": wavs_path / "Brenda_0.wav",
-    "donato": wavs_path / "Donato_0.wav",
-    "elza": wavs_path / "Elza_5.wav",
-    "fabio": wavs_path / "Fabio_6.wav",
-    "francisca": wavs_path / "Francisca_0.wav",
-    "giovanna": wavs_path / "Giovanna_0.wav",
-    "humberto": wavs_path / "Humberto_0.wav",
-    "julio": wavs_path / "Julio_16.wav",
-    "keren": wavs_path / "Keren_0.wav",
-    "manuela": wavs_path / "Manuela_0.wav",
-    "nicolau": wavs_path / "Nicolau_8.wav",
-    "thalita": wavs_path / "Thalita_12.wav",
-    "valerio": wavs_path / "Valerio_4.wav",
-    "yara": wavs_path / "Yara_2.wav",
+    "antonio": "Antonio_0.wav",
+    "brenda": "Brenda_0.wav",
+    "donato": "Donato_0.wav",
+    "elza": "Elza_5.wav",
+    "fabio": "Fabio_6.wav",
+    "francisca": "Francisca_0.wav",
+    "giovanna": "Giovanna_0.wav",
+    "humberto": "Humberto_0.wav",
+    "julio": "Julio_16.wav",
+    "keren": "Keren_0.wav",
+    "manuela": "Manuela_0.wav",
+    "nicolau": "Nicolau_8.wav",
+    "thalita": "Thalita_12.wav",
+    "valerio": "Valerio_4.wav",
+    "yara": "Yara_2.wav",
 }
 
 
@@ -44,7 +44,7 @@ def list_audio_formats():
 @router.post("/tts/streaming")
 async def generate_audio_streaming(request: TTSRequest):
     tts_engine = TTSInferenceEngine.factory()
-    ref_path = reference_dicts[request.speaker]
+    ref_path = wavs_path / reference_dicts[request.speaker]
     ref_s = tts_engine.compute_style(ref_path)
     amostras = tts_engine.inference(request.text, ref_s)
     buffer, media_type = save_audio_to_buffer(

@@ -31,6 +31,7 @@ class TTSInferenceEngine:
     _instance: "TTSInferenceEngine" = None
 
     def __init__(self):
+        print("cuda" if torch.cuda.is_available() else "cpu")
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
         self.to_mel = torchaudio.transforms.MelSpectrogram(
@@ -47,6 +48,7 @@ class TTSInferenceEngine:
         self.backend = self._load_phonemizer_backend()
         self.model = self._load_all_models()
         self.sampler = self._create_sampler()
+        self.warmup()
 
     @classmethod
     def factory(cls):
@@ -155,19 +157,18 @@ class TTSInferenceEngine:
 
         return torch.cat([ref_s, ref_p], dim=1)
 
-    # def warmup(self):
-    #     """Executa uma inferência inicial para aquecer a GPU."""
-    #     print("[INFO] Aquecendo GPU...")
-    #     try:
-    #         # self.inference("A", diffusion_steps=2, embedding_scale=1)
-    #         ref_s = torch.randn(1, 256).to(self.device)
-    #         self.inference("A", ref_s=ref_s, diffusion_steps=2, embedding_scale=1)
-    #         print("[INFO] Warm-up concluído.")
-    #     except Exception as e:
-    #         # Não é crítico se o warmup falhar, pode ser um pequeno erro de shape
-    #         print(f"[WARN] Warmup ignorado devido a erro: {e}")
+    def warmup(self):
+        """Executa uma inferência inicial para aquecer a GPU."""
+        print("[INFO] Aquecendo GPU...")
+        try:
+            # self.inference("A", diffusion_steps=2, embedding_scale=1)
+            ref_s = torch.randn(1, 256).to(self.device)
+            self.inference("A", ref_s=ref_s, diffusion_steps=2, embedding_scale=1)
+            print("[INFO] Warm-up concluído.")
+        except Exception as e:
+            # Não é crítico se o warmup falhar, pode ser um pequeno erro de shape
+            print(f"[WARN] Warmup ignorado devido a erro: {e}")
 
-    # A função principal de inferência (MUITO IMPORTANTE manter em no_grad!)
     def inference(
         self, text, ref_s, alpha=0.3, beta=0.7, diffusion_steps=5, embedding_scale=1
     ):

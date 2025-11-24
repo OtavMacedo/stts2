@@ -26,5 +26,5 @@ RUN poetry install --without dev --no-root
 COPY . .
 
 EXPOSE 8000
-# Run uvicorn pointing to the top-level module `api` (api.py is at project root)
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+CMD ["uvicorn", "src.main:app", "--workers", "1", "--host", "0.0.0.0", "--port", "8000"]

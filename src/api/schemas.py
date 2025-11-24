@@ -20,7 +20,9 @@ Speaker = Literal[
     "yara",
 ]
 
-AudioFormat = Literal["wav", "mp3", "opus", "aac", "flac", "pcm"]
+AudioFormat = Literal["wav", "mp3", "opus", "pcm"]
+
+GetList = dict[str, list]
 
 
 class TTSRequest(BaseModel):

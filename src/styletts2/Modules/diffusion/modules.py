@@ -1,8 +1,6 @@
 from math import log, pi
 from typing import Optional
 
-from .utils import *
-
 import torch
 import torch.nn as nn
 from einops import rearrange, reduce, repeat
@@ -10,6 +8,7 @@ from einops.layers.torch import Rearrange
 from einops_exts import rearrange_many
 from torch import Tensor, einsum
 
+from .utils import *
 
 """
 Utils

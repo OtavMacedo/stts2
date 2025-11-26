@@ -26,7 +26,7 @@ from src.symbols.BrPt_symbols import BRPT_list
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 
-wavs_path = Path(__file__).resolve().parent.parent / "wavs_reference"
+voices_path = Path(__file__).resolve().parent.parent.parent / "voices"
 
 reference_dicts = {
     "antonio": "Antonio_0.wav",
@@ -53,7 +53,6 @@ class TTSInferenceEngine:
     _instance: "TTSInferenceEngine" = None
 
     def __init__(self):
-        print("cuda" if torch.cuda.is_available() else "cpu")
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
         self.to_mel = torchaudio.transforms.MelSpectrogram(
@@ -75,7 +74,7 @@ class TTSInferenceEngine:
 
     def _load_styles(self):
         return {
-            k: self.compute_style(wavs_path / v) for k, v in reference_dicts.items()
+            k: self.compute_style(voices_path / v) for k, v in reference_dicts.items()
         }
 
     def _load_phonemizer_backend(self):
@@ -200,7 +199,6 @@ class TTSInferenceEngine:
             if i in BRPT_list:
                 tokens.append(BRPT_list.index(i))
             else:
-                print(f"ERRO: Caractere '{i}' não encontrado na lista BRPT_list.")
                 raise ValueError("Caractere inválido na frase.")
 
         tokens = torch.LongTensor(tokens).to(self.device).unsqueeze(0)

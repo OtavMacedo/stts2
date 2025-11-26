@@ -3,7 +3,8 @@ from typing import Optional
 
 import torch
 import torch.nn as nn
-from einops import rearrange, reduce, repeat
+from einops import rearrange, repeat
+from einops import reduce as einops_reduce
 from einops.layers.torch import Rearrange
 from einops_exts import rearrange_many
 from torch import Tensor, einsum
@@ -135,7 +136,7 @@ class StyleTransformer1d(nn.Module):
 
         # Compute joint mapping
         if self.use_context_time or self.use_context_features:
-            mapping = reduce(torch.stack(items), "n b m -> b m", "sum")
+            mapping = einops_reduce(torch.stack(items), "n b m -> b m", "sum")
             mapping = self.to_mapping(mapping)
 
         return mapping
@@ -383,7 +384,7 @@ class Transformer1d(nn.Module):
 
         # Compute joint mapping
         if self.use_context_time or self.use_context_features:
-            mapping = reduce(torch.stack(items), "n b m -> b m", "sum")
+            mapping = einops_reduce(torch.stack(items), "n b m -> b m", "sum")
             mapping = self.to_mapping(mapping)
 
         return mapping

@@ -1,30 +1,52 @@
+import warnings
+from collections import OrderedDict
+from pathlib import Path
+
+import librosa
+import phonemizer
 import torch
 import torchaudio
 import yaml
-import phonemizer
-import warnings
-import librosa
-
-from src.core.models import load_ASR_models, load_F0_models, build_model
-from src.core.utils import recursive_munch
-from src.symbols.BrPt_symbols import BRPT_list
+from phonemizer.backend import BACKENDS
+from phonemizer.logger import get_logger
 from phonemizer.phonemize import _phonemize
-from src.styletts2.Utils.MLPLBERT.util import load_plbert
+from phonemizer.punctuation import Punctuation
+
+from src.api.schemas import Speaker
+from src.core.models import build_model, load_ASR_models, load_F0_models
+from src.core.utils import recursive_munch
 from src.styletts2.Modules.diffusion.sampler import (
-    DiffusionSampler,
     ADPM2Sampler,
+    DiffusionSampler,
     KarrasSchedule,
 )
-from collections import OrderedDict
-
-from phonemizer.punctuation import Punctuation
-from phonemizer.logger import get_logger
-from phonemizer.backend import BACKENDS
-
-from pathlib import Path
+from src.styletts2.Utils.MLPLBERT.util import load_plbert
+from src.symbols.BrPt_symbols import BRPT_list
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
+
+wavs_path = Path(__file__).resolve().parent.parent / "wavs_reference"
+
+reference_dicts = {
+    "antonio": "Antonio_0.wav",
+    "brenda": "Brenda_0.wav",
+    "donato": "Donato_0.wav",
+    "elza": "Elza_5.wav",
+    "fabio": "Fabio_6.wav",
+    "francisca": "Francisca_0.wav",
+    "giovanna": "Giovanna_0.wav",
+    "humberto": "Humberto_0.wav",
+    "julio": "Julio_16.wav",
+    "keren": "Keren_0.wav",
+    "manuela": "Manuela_0.wav",
+    "nicolau": "Nicolau_8.wav",
+    "thalita": "Thalita_12.wav",
+    "valerio": "Valerio_4.wav",
+    "yara": "Yara_2.wav",
+}
+
+SAMPLE_RATE = 24000
 
 
 class TTSInferenceEngine:
@@ -43,18 +65,18 @@ class TTSInferenceEngine:
         self.config = yaml.safe_load(
             open(Path(__file__).resolve().parent / "model_config.yml")
         )
-        self.rate = 24000
+        self.rate = SAMPLE_RATE
 
         self.backend = self._load_phonemizer_backend()
         self.model = self._load_all_models()
         self.sampler = self._create_sampler()
+        self.styles = self._load_styles()
         self.warmup()
 
-    @classmethod
-    def factory(cls):
-        if cls._instance is None:
-            cls._instance = TTSInferenceEngine()
-        return cls._instance
+    def _load_styles(self):
+        return {
+            k: self.compute_style(wavs_path / v) for k, v in reference_dicts.items()
+        }
 
     def _load_phonemizer_backend(self):
         return BACKENDS["espeak"](
@@ -151,30 +173,25 @@ class TTSInferenceEngine:
             audio = librosa.resample(audio, sr, 24000)
         mel_tensor = self._preprocess(audio).to(self.device)
 
-        with torch.no_grad():
+        with torch.inference_mode():
             ref_s = self.model.style_encoder(mel_tensor.unsqueeze(1))
             ref_p = self.model.predictor_encoder(mel_tensor.unsqueeze(1))
 
         return torch.cat([ref_s, ref_p], dim=1)
 
     def warmup(self):
-        """Executa uma inferência inicial para aquecer a GPU."""
-        print("[INFO] Aquecendo GPU...")
-        try:
-            # self.inference("A", diffusion_steps=2, embedding_scale=1)
-            ref_s = torch.randn(1, 256).to(self.device)
-            self.inference("A", ref_s=ref_s, diffusion_steps=2, embedding_scale=1)
-            print("[INFO] Warm-up concluído.")
-        except Exception as e:
-            # Não é crítico se o warmup falhar, pode ser um pequeno erro de shape
-            print(f"[WARN] Warmup ignorado devido a erro: {e}")
+        self.inference("A", ref_speaker="antonio")
 
     def inference(
-        self, text, ref_s, alpha=0.3, beta=0.7, diffusion_steps=5, embedding_scale=1
+        self,
+        text: str,
+        ref_speaker: Speaker,
+        alpha=0.3,
+        beta=0.7,
+        diffusion_steps=5,
+        embedding_scale=1,
     ):
-        """Executa a inferência TTS e retorna o array numpy de amostras."""
-
-        # Conversão para tokens (mantendo o tratamento de erros)
+        ref_style = self.styles[ref_speaker]
         phs = self._text2phoneme(text)
         phs = phs.replace("|", "")
         phs = f"*{phs}&"
@@ -188,7 +205,7 @@ class TTSInferenceEngine:
 
         tokens = torch.LongTensor(tokens).to(self.device).unsqueeze(0)
 
-        with torch.no_grad():
+        with torch.inference_mode():
             input_lengths = torch.LongTensor([tokens.shape[-1]]).to(tokens.device)
             text_mask = self._length_to_mask(input_lengths).to(tokens.device)
 
@@ -200,15 +217,15 @@ class TTSInferenceEngine:
                 noise=torch.randn((1, 256)).unsqueeze(1).to(self.device),
                 embedding=bert_dur[0].unsqueeze(0),
                 embedding_scale=embedding_scale,
-                features=ref_s,
+                features=ref_style,
                 num_steps=diffusion_steps,
             ).squeeze(1)
 
             s = s_pred[:, 128:]
             ref = s_pred[:, :128]
 
-            ref = alpha * ref + (1 - alpha) * ref_s[:, :128]
-            s = beta * s + (1 - beta) * ref_s[:, 128:]
+            ref = alpha * ref + (1 - alpha) * ref_style[:, :128]
+            s = beta * s + (1 - beta) * ref_style[:, 128:]
 
             d = self.model.predictor.text_encoder(d_en, s, input_lengths, text_mask)
 

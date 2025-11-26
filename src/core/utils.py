@@ -1,6 +1,7 @@
 from io import BytesIO
-from munch import Munch
+
 import soundfile as sf
+from munch import Munch
 
 from src.api.schemas import AudioFormat
 

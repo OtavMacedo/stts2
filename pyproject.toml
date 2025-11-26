@@ -53,3 +53,7 @@ priority = "explicit"
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.14.5"
 
+[tool.ruff.lint]
+preview = true
+select = ['I', 'F', 'E', 'W', 'PT']
+ignore = ['E501']                   # Ignore line too long for now

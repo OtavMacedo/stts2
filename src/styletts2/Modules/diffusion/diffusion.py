@@ -1,7 +1,7 @@
 from torch import Tensor, nn
 
-from .utils import *
 from .sampler import *
+from .utils import *
 
 """
 Diffusion Classes (generic for 1d data)

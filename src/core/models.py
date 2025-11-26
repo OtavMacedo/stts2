@@ -3,23 +3,20 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn.utils import weight_norm, spectral_norm
+import yaml
+from munch import Munch
+from torch.nn.utils import spectral_norm, weight_norm
 
-from src.styletts2.Utils.ASR.models import ASRCNN
-from src.styletts2.Utils.JDC.model import JDCNet
-
-from src.styletts2.Modules.diffusion.sampler import KDiffusion, LogNormalDistribution
-from src.styletts2.Modules.diffusion.modules import Transformer1d, StyleTransformer1d
 from src.styletts2.Modules.diffusion.diffusion import AudioDiffusionConditional
-
+from src.styletts2.Modules.diffusion.modules import StyleTransformer1d, Transformer1d
+from src.styletts2.Modules.diffusion.sampler import KDiffusion, LogNormalDistribution
 from src.styletts2.Modules.discriminators import (
     MultiPeriodDiscriminator,
     MultiResSpecDiscriminator,
     WavLMDiscriminator,
 )
-
-from munch import Munch
-import yaml
+from src.styletts2.Utils.ASR.models import ASRCNN
+from src.styletts2.Utils.JDC.model import JDCNet
 
 
 class LearnedDownSample(nn.Module):
@@ -551,7 +548,7 @@ def load_F0_models(path):
     # load F0 model
 
     F0_model = JDCNet(num_class=1, seq_len=192)
-    params = torch.load(path, map_location="cpu")["model"]  #'net'
+    params = torch.load(path, map_location="cpu")["model"]  # 'net'
     F0_model.load_state_dict(params)
     _ = F0_model.train()
 
